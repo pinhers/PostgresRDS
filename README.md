@@ -92,6 +92,8 @@ docker system prune -a
 * Test `/health` endpoint for DB connectivity
 * Test `/submit` endpoint via curl or Postman
 * Confirm data is inserted into RDS
+* Enter database with 'psql -h flask-db.cnuocu8suj74.eu-west-1.rds.amazonaws.com -U ITadmin -d flask_db'
+* To see the entries SELECT * FROM entries;
 
 ## Troubleshooting
 
