@@ -4,7 +4,8 @@ services:
   web:
     build: ./web
     environment:
-      DATABASE_URL: postgresql://ITadmin:yourpassword@flask-db.cnuocu8suj74.eu-west-1.rds.amazonaws.com:5432/flas>      FLASK_RUN_HOST: 0.0.0.0
+      DATABASE_URL: postgresql://ITadmin:yourpassword@flask-db.cnuocu8suj74.eu-west-1.rds.amazonaws.com:5432/flask_db
+      FLASK_RUN_HOST: 0.0.0.0
       FLASK_ENV: production
     ports:
       - "5000:5000"
@@ -24,4 +25,3 @@ services:
       - ./web/templates:/usr/share/nginx/html:ro
     ports:
       - "80:80"
-
