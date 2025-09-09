@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flask Form</title>
+</head>
+<body>
+    <h1>Submit a Message</h1>
+    <form id="submitForm">
+        <label>Name: <input type="text" name="name" required></label><br>
+        <label>Email: <input type="email" name="email" required></label><br>
+        <label>Message: <textarea name="message" required></textarea></label><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="response"></div>
+
+    <script>
+        const form = document.getElementById("submitForm");
+        const responseDiv = document.getElementById("response");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch("/api/submit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const json = await res.json();
+                responseDiv.innerText = JSON.stringify(json);
+            } catch (err) {
+                responseDiv.innerText = "Error: " + err;
+            }
+        });
+    </script>
+</body>
+</html>
