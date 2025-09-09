@@ -1,128 +1,52 @@
-# Flask + AWS RDS (PostgreSQL) Project
+# Flask + AWS RDS Project Setup Guide
 
-This project demonstrates how to build a **Flask application** connected to an **AWS RDS PostgreSQL** database, containerize it with **Docker Compose**, and manage schema/tables.
+## Prerequisites
 
----
+* Ubuntu server or local machine with internet access
+* Python 3.11 installed
+* AWS RDS PostgreSQL instance
+* Docker and Docker Compose installed
 
-## 🚀 Setup
+## Step 1: Python Virtual Environment
 
-### 1. Install Python and dependencies
-
-```bash
+```
 sudo apt update
 sudo apt install -y python3-venv python3-pip
-```
-
-Create and activate a virtual environment:
-
-```bash
 python3 -m venv venv
 source venv/bin/activate
-```
-
-Upgrade pip and install dependencies:
-
-```bash
-python3 -m ensurepip --upgrade
-python3 -m pip install --upgrade pip
+pip install --upgrade pip
 pip install flask flask-sqlalchemy psycopg2-binary
 ```
 
----
+## Step 2: Configuration
 
-### 2. Configuration (`config.py`)
+Create a configuration file with your RDS credentials. Include host, database name, user, and password, and build the SQLAlchemy URI.
 
-```python
-import os
+## Step 3: Flask App
 
-DB_HOST = "flask-db.cnuocu8suj74.eu-west-1.rds.amazonaws.com"
-DB_NAME = "flask-db"
-DB_USER = "ITadmin"
-DB_PASS = "yourpassword"
+* Initialize Flask
+* Connect SQLAlchemy to the database using the URI
+* Define models for tables (User, Entries, etc.)
+* Create routes for `/` and `/submit`
+* Use `app.run(host='0.0.0.0', port=5000)` for Docker compatibility
 
-SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}"
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+## Step 4: Database Setup
+
+* Connect to PostgreSQL using `psql`:
+
+```
+psql -h <RDS_HOST> -U <USER> -d postgres
 ```
 
----
+* Create database if missing:
 
-### 3. Flask Application (`app.py`)
-
-```python
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.config.from_pyfile('config.py')
-
-db = SQLAlchemy(app)
-
-# Example model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    email = db.Column(db.String(100), unique=True)
-
-@app.route('/')
-def index():
-    return "Flask App Connected to AWS RDS PostgreSQL!"
-
-if __name__ == '__main__':
-    app.run(debug=True)
 ```
-
-Run locally:
-
-```bash
-source venv/bin/activate
-python app.py
-```
-
----
-
-### 4. AWS RDS Setup
-
-Connect to RDS:
-
-```bash
-psql -h flask-db.cnuocu8suj74.eu-west-1.rds.amazonaws.com -U ITadmin -d postgres
-```
-
-If DB doesn’t exist:
-
-```sql
 CREATE DATABASE flask_db;
 ```
 
-List databases:
+* Create necessary tables (e.g., entries):
 
-```sql
-SELECT datname FROM pg_database;
 ```
-
----
-
-### 5. Creating Tables
-
-From Python shell:
-
-```bash
-cd /home/ubuntu/PostgresRDS
-source venv/bin/activate
-python3
-```
-
-```python
-from app import db, app
-with app.app_context():
-    db.create_all()
-```
-
-Manual SQL table:
-
-```sql
-\c flask_db
-
 CREATE TABLE entries (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -130,66 +54,48 @@ CREATE TABLE entries (
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-INSERT INTO entries (name, email, message)
-VALUES ('Afonso', 'afonso@example.com', 'Hello from AWS RDS!');
-
-SELECT * FROM entries;
 ```
 
----
+## Step 5: Initialize Tables via Flask
 
-### 6. Docker & Docker Compose
+* Activate virtual environment:
 
-Install:
-
-```bash
-apt install docker-compose
+```
+source venv/bin/activate
+python3
 ```
 
-Stop and clean containers:
+* Inside Python shell:
 
-```bash
+```
+from app import db, app
+with app.app_context():
+    db.create_all()
+```
+
+## Step 6: Docker & Docker Compose
+
+* Build and run containers
+* Use health checks for Flask service
+* Configure Nginx to serve static content and proxy API requests
+* Common commands:
+
+```
+docker-compose build
+docker-compose up -d
 docker-compose down --volumes --remove-orphans
-docker system prune -a   # ⚠ deletes all unused images/containers
+docker system prune -a
 ```
 
----
+## Step 7: Testing
 
-### 7. Healthcheck
+* Test `/health` endpoint for DB connectivity
+* Test `/submit` endpoint via curl or Postman
+* Confirm data is inserted into RDS
 
-Inside Docker or host:
+## Troubleshooting
 
-```bash
-curl http://localhost:5000/health
-```
-
-Expected output:
-
-```json
-{"ok": true}
-```
-
----
-
-## 🔧 Troubleshooting
-
-* **404 on `/submit`** → Check that your frontend form calls `/api/submit`, not `/submit`.
-* **Database connection error** → Ensure AWS RDS security group allows inbound `5432` from your EC2/server.
-* **Broken venv** → Recreate it with:
-
-  ```bash
-  rm -rf venv
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-* **Docker issues** → Run `docker-compose logs` to debug.
-
----
-
-## ✅ Next Steps
-
-* Add HTML templates under `templates/`
-* Create an API endpoint for `/api/submit`
-* Use Docker to deploy Flask + Nginx in production
-* Automate DB migrations with **Flask-Migrate**
+* 404 errors: check route paths and Nginx proxy
+* TemplateNotFound: ensure `templates/` folder exists and contains `index.html`
+* DB connection errors: verify `DATABASE_URL` or credentials
+* Docker mount errors: verify paths exist on host
