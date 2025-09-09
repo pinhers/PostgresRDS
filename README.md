@@ -20,9 +20,9 @@ pip install flask flask-sqlalchemy psycopg2-binary
 
 ## Step 2: Configuration
 
-Create a configuration file with your RDS credentials. Include host, database name, user, and password, and build the SQLAlchemy URI.
+Create a configuration file (docker-compose.yaml) with your RDS credentials. Include host, database name, user, and password, and build the SQLAlchemy URI.
 
-## Step 3: Flask App
+## Step 3: Flask App (app.py)
 
 * Initialize Flask
 * Connect SQLAlchemy to the database using the URI
